@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
 import player.Player;
 import player.Players;
+import player.ResponseStatus;
 
 import java.io.IOException;
 import java.net.URI;
@@ -40,5 +41,28 @@ public class HttpClientShould {
                 .collect(toUnmodifiableList());
 
         assertThat(topScorers).contains(new Player("Ali Karimi", 250));
+    }
+
+    @Test
+    void send_a_request_to_add_a_player() throws URISyntaxException, IOException, InterruptedException {
+        String player = new Gson().toJson(new Player("Farhad Majidi", 275));
+        out.println(player);
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(new URI("https://sevenlearn.free.beeceptor.com/players/add"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.ofString(player))
+                .build();
+
+        final HttpResponse<String> response = HttpClient.newHttpClient()
+                .send(request, HttpResponse.BodyHandlers.ofString());
+
+        final String body = response.body();
+        out.println(body);
+
+        final Gson gson = new Gson();
+        final ResponseStatus responseStatus = gson.fromJson(body, ResponseStatus.class);
+
+        assertThat(responseStatus.getStatus()).isEqualTo("200");
     }
 }
