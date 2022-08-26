@@ -13,6 +13,8 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 
 import static java.lang.System.out;
 import static java.util.stream.Collectors.toUnmodifiableList;
@@ -64,5 +66,32 @@ public class HttpClientShould {
         final ResponseStatus responseStatus = gson.fromJson(body, ResponseStatus.class);
 
         assertThat(responseStatus.getStatus()).isEqualTo("200");
+    }
+
+    @Test
+    void do_asynch_calls() throws URISyntaxException, InterruptedException, ExecutionException {
+        HttpRequest postRequest = HttpRequest.newBuilder()
+                .uri(new URI("https://sevenlearn.free.beeceptor.com/players/add"))
+                .header("Content-Type", "application/json")
+                .POST(HttpRequest.BodyPublishers.noBody())
+                .build();
+
+/*        final HttpResponse<String> postResponse = HttpClient.newHttpClient()
+                .send(postRequest, HttpResponse.BodyHandlers.ofString());*/
+        final CompletableFuture<HttpResponse<String>> postResponse = HttpClient.newHttpClient()
+                .sendAsync(postRequest, HttpResponse.BodyHandlers.ofString());
+
+        HttpRequest getRequest = HttpRequest.newBuilder()
+                .uri(new URI("https://sevenlearn.free.beeceptor.com/players"))
+                .GET()
+                .build();
+
+/*        final HttpResponse<String> getResponse = HttpClient.newHttpClient()
+                .send(getRequest, HttpResponse.BodyHandlers.ofString());*/
+        final CompletableFuture<HttpResponse<String>> getResponse = HttpClient.newHttpClient()
+                .sendAsync(getRequest, HttpResponse.BodyHandlers.ofString());
+
+        out.println(getResponse.get());
+        out.println(postResponse.get());
     }
 }
